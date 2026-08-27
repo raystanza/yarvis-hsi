@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>J.A.R.V.I.S. // System Interface</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="fxCanvas" aria-hidden="true"></canvas>
+  <div id="scanlines" aria-hidden="true"></div>
+  <div id="vignette" aria-hidden="true"></div>
+
+  <main id="interface">
+    <header class="topbar glass-cut">
+      <div class="topbar-left">
+        <span class="eyebrow">ARTIFICIAL INTELLIGENCE // SYSTEM INTERFACE</span>
+        <strong id="systemTitle">J.A.R.V.I.S.</strong>
+      </div>
+      <div class="topbar-center" aria-hidden="true">
+        <span class="microline"></span><span class="diamond"></span><span class="microline"></span>
+      </div>
+      <div class="topbar-right">
+        <span id="hostState" class="state waiting">LINK // WAITING</span>
+        <span id="clock">--:--:--</span>
+        <span id="date">----</span>
+      </div>
+    </header>
+
+    <section class="layout">
+      <aside class="side left-stack">
+        <section class="panel glass-cut telemetry-panel">
+          <div class="panel-title"><span>01</span> HOST TELEMETRY</div>
+          <div class="metric" data-metric="cpu">
+            <div class="metric-head"><span>CPU LOAD</span><strong id="cpuValue">--%</strong></div>
+            <div class="bar"><i id="cpuBar"></i></div>
+            <small id="cpuName">awaiting processor identity</small>
+          </div>
+          <div class="metric" data-metric="gpu">
+            <div class="metric-head"><span>GPU 3D</span><strong id="gpuValue">--%</strong></div>
+            <div class="bar"><i id="gpuBar"></i></div>
+            <small id="gpuName">awaiting graphics adapter</small>
+          </div>
+          <div class="metric" data-metric="ram">
+            <div class="metric-head"><span>MEMORY</span><strong id="ramValue">--%</strong></div>
+            <div class="bar"><i id="ramBar"></i></div>
+            <small id="ramDetail">-- / -- GB</small>
+          </div>
+        </section>
+
+        <section class="panel glass-cut net-panel">
+          <div class="panel-title"><span>02</span> NETWORK BUS</div>
+          <div class="net-grid">
+            <div><span>RX</span><strong id="netDown">--</strong><small>MB/s</small></div>
+            <div><span>TX</span><strong id="netUp">--</strong><small>MB/s</small></div>
+          </div>
+          <div class="signal-strip" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <small id="netName">awaiting network adapter</small>
+        </section>
+
+        <section class="panel glass-cut compact-panel">
+          <div class="panel-title"><span>03</span> CORE STATUS</div>
+          <div class="status-row"><span>HOST LINK</span><b id="linkStatus">STANDBY</b></div>
+          <div class="status-row"><span>RENDER CORE</span><b>ONLINE</b></div>
+          <div class="status-row"><span>AUDIO BUS</span><b id="audioStatus">ARMED</b></div>
+          <div class="status-row"><span>UPTIME</span><b id="sessionUptime">00:00:00</b></div>
+        </section>
+      </aside>
+
+      <section class="core-zone" aria-label="central holographic system core">
+        <div class="core-caption top-caption"><span>HOLOGRAPHIC CORE</span><b id="coreMode">SYNCHRONIZING</b></div>
+        <div class="core-readout left-readout"><span>CPU</span><b id="coreCpu">--</b><small>%</small></div>
+        <div class="core-readout right-readout"><span>GPU</span><b id="coreGpu">--</b><small>%</small></div>
+        <div class="core-label">
+          <small>COGNITIVE SYSTEM</small>
+          <strong id="coreLabel">J.A.R.V.I.S.</strong>
+          <span id="coreSubLabel">HOST INTEGRATION // ACTIVE</span>
+        </div>
+        <div class="core-caption bottom-caption"><span id="coreState">SYSTEM INITIALIZATION</span><b id="corePercent">000.0</b></div>
+      </section>
+
+      <aside class="side right-stack">
+        <section class="panel glass-cut diag-panel">
+          <div class="panel-title"><span>04</span> DIAGNOSTIC MATRIX</div>
+          <div id="diagRows" class="diag-rows">
+            <div><span>kernel interface</span><b>OK</b></div>
+            <div><span>telemetry parser</span><b>OK</b></div>
+            <div><span>graphics compositor</span><b>OK</b></div>
+            <div><span>network monitor</span><b>OK</b></div>
+            <div><span>audio spectrum</span><b>OK</b></div>
+            <div><span>holographic renderer</span><b>OK</b></div>
+          </div>
+        </section>
+
+        <section class="panel glass-cut vector-panel">
+          <div class="panel-title"><span>05</span> VECTOR ANALYSIS</div>
+          <canvas id="miniGraph" width="420" height="120" aria-hidden="true"></canvas>
+          <div class="vector-labels"><span>CPU</span><span>GPU</span><span>NET</span></div>
+        </section>
+
+        <section class="panel glass-cut identity-panel">
+          <div class="panel-title"><span>06</span> INTERFACE IDENTITY</div>
+          <div class="identity-line"><span>NODE</span><b id="nodeLabel">DESKTOP // PRIMARY</b></div>
+          <div class="identity-line"><span>MODE</span><b>PASSIVE OBSERVATION</b></div>
+          <div class="identity-line"><span>SECURITY</span><b>NOMINAL</b></div>
+          <div class="identity-line"><span>BUILD</span><b>1.0 // LIVELY</b></div>
+        </section>
+      </aside>
+    </section>
+
+    <footer class="footer glass-cut">
+      <div id="bootLog"><span>[ .. ]</span> establishing host telemetry channel</div>
+      <div class="footer-center"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div>LOCAL INTERFACE // <b id="footerState">STANDBY</b></div>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

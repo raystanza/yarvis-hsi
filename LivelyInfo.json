@@ -1,0 +1,14 @@
+{
+  "AppVersion": "2.0.6.0",
+  "Title": "J.A.R.V.I.S. // Holographic System Interface",
+  "Thumbnail": "thumbnail.jpg",
+  "Preview": null,
+  "Desc": "A cinematic J.A.R.V.I.S.-inspired holographic desktop HUD with live CPU, GPU, RAM and network telemetry, optional audio-reactive reactor graphics, diagnostic panels and configurable PowerToys safe area.",
+  "Author": "Custom",
+  "License": "MIT",
+  "Contact": null,
+  "Type": 1,
+  "FileName": "index.html",
+  "Arguments": "--system-information --audio --pause-event true",
+  "IsAbsolutePath": false
+}

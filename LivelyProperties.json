@@ -1,0 +1,125 @@
+{
+  "theme": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "HUD color theme",
+    "items": [
+      "Arc Cyan",
+      "Deep Blue",
+      "Reactor Teal",
+      "Amber Lab",
+      "Custom"
+    ]
+  },
+  "customAccent": {
+    "type": "color",
+    "value": "#59e6ff",
+    "text": "Custom accent color"
+  },
+  "customBackground": {
+    "type": "color",
+    "value": "#02070d",
+    "text": "Custom background color"
+  },
+  "topSafeArea": {
+    "type": "slider",
+    "value": 44,
+    "min": 0,
+    "max": 180,
+    "step": 1,
+    "text": "Top safe area / PowerToys toolbar (px)"
+  },
+  "hudOpacity": {
+    "type": "slider",
+    "value": 92,
+    "min": 25,
+    "max": 100,
+    "step": 1,
+    "text": "HUD panel opacity"
+  },
+  "fps": {
+    "type": "dropdown",
+    "value": 1,
+    "text": "Render frame rate",
+    "items": [
+      "20 FPS",
+      "30 FPS",
+      "45 FPS",
+      "60 FPS"
+    ]
+  },
+  "animationSpeed": {
+    "type": "slider",
+    "value": 100,
+    "min": 25,
+    "max": 200,
+    "step": 5,
+    "text": "Animation speed (%)"
+  },
+  "glow": {
+    "type": "slider",
+    "value": 100,
+    "min": 0,
+    "max": 160,
+    "step": 5,
+    "text": "Holographic glow (%)"
+  },
+  "scanlines": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Fine display scanlines"
+  },
+  "grid": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Background technical grid"
+  },
+  "particles": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Ambient data particles"
+  },
+  "showPanels": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Show side telemetry panels"
+  },
+  "audioReactive": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Audio-reactive reactor spectrum"
+  },
+  "audioSensitivity": {
+    "type": "slider",
+    "value": 100,
+    "min": 25,
+    "max": 250,
+    "step": 5,
+    "text": "Audio reaction sensitivity (%)"
+  },
+  "clock24h": {
+    "type": "checkbox",
+    "value": true,
+    "text": "24-hour clock"
+  },
+  "showSeconds": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Show clock seconds"
+  },
+  "systemTitle": {
+    "type": "textbox",
+    "value": "J.A.R.V.I.S.",
+    "text": "Top interface title"
+  },
+  "coreLabel": {
+    "type": "textbox",
+    "value": "J.A.R.V.I.S.",
+    "text": "Central core label"
+  },
+  "nodeLabel": {
+    "type": "textbox",
+    "value": "DESKTOP // PRIMARY",
+    "text": "Computer / node label"
+  }
+}
