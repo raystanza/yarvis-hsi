@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 $BuildVersion = (Get-Content -LiteralPath (Join-Path $PSScriptRoot "version") -Raw).Trim()
 
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-    $OutputPath = Join-Path $PSScriptRoot "dist/JARVIS-HSI-v$BuildVersion.zip"
+    $OutputPath = Join-Path $PSScriptRoot "dist/YARVIS-HSI-v$BuildVersion.zip"
 }
 
 $packageFiles = @(

@@ -109,12 +109,12 @@
   },
   "systemTitle": {
     "type": "textbox",
-    "value": "J.A.R.V.I.S.",
+    "value": "Y.A.R.V.I.S.",
     "text": "Top interface title"
   },
   "coreLabel": {
     "type": "textbox",
-    "value": "J.A.R.V.I.S.",
+    "value": "Y.A.R.V.I.S.",
     "text": "Central core label"
   },
   "nodeLabel": {

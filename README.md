@@ -1,4 +1,6 @@
-# J.A.R.V.I.S. // Holographic System Interface
+# Y.A.R.V.I.S. // Holographic System Interface
+
+**Y**et **A**nother **R**ather **V**ery **I**ntelligent **S**ystem
 
 A custom Lively Wallpaper inspired by the cinematic language of futuristic holographic AI interfaces: concentric reactor rings, real diagnostic panels, animated vector graphics, live host telemetry, Windows media metadata, and an optional audio-reactive spectrum.
 

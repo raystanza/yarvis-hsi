@@ -1,9 +1,9 @@
 {
   "AppVersion": "2.0.6.0",
-  "Title": "J.A.R.V.I.S. // Holographic System Interface",
+  "Title": "Y.A.R.V.I.S. // Holographic System Interface",
   "Thumbnail": "thumbnail.jpg",
   "Preview": null,
-  "Desc": "A cinematic J.A.R.V.I.S.-inspired holographic desktop HUD with live hardware telemetry, Windows media metadata, audio-reactive reactor graphics, real diagnostics and configurable PowerToys safe area.",
+  "Desc": "Y.A.R.V.I.S. - A holographic desktop HUD with live hardware telemetry, Windows media metadata, audio-reactive reactor graphics, real diagnostics and configurable safe area.",
   "Author": "raystanza",
   "License": "MIT",
   "Contact": "raystanza.dev@gmail.com",

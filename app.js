@@ -34,8 +34,8 @@
     audioSensitivity: 100,
     clock24h: true,
     showSeconds: true,
-    systemTitle: "J.A.R.V.I.S.",
-    coreLabel: "J.A.R.V.I.S.",
+    systemTitle: "Y.A.R.V.I.S.",
+    coreLabel: "Y.A.R.V.I.S.",
     nodeLabel: "DESKTOP // PRIMARY"
   };
 
