@@ -45,9 +45,50 @@
     cpuName: "awaiting processor identity",
     gpuName: "awaiting graphics adapter",
     netName: "awaiting network adapter",
+    payloadValid: false,
+    source: "demo",
+    state: "waiting",
     live: false,
     lastSeen: 0
   };
+
+  const media = {
+    supported: false,
+    active: false,
+    title: "",
+    artist: "",
+    album: "",
+    genre: "",
+    playbackType: "",
+    subtitle: "",
+    track: 0,
+    trackCount: 0,
+    thumbnail: "",
+    lastSeen: 0
+  };
+
+  const device = {
+    cores: Number(navigator.hardwareConcurrency) || 0,
+    locale: navigator.language || "unknown",
+    timezone: "unknown",
+    online: navigator.onLine !== false,
+    battery: null,
+    batterySupported: false,
+    batteryInitialized: false,
+    batteryError: false
+  };
+
+  const renderer = {
+    fps: 0,
+    frames: 0,
+    sampleStart: performance.now()
+  };
+
+  try {
+    device.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown";
+  } catch (_) {
+    device.timezone = "unknown";
+  }
 
   let width = 1920, height = 1080, dpr = 1;
   let paused = false;
@@ -57,6 +98,10 @@
   let phase = 0;
   let audio = new Array(128).fill(0);
   let audioLevel = 0;
+  let audioSourceSeen = false;
+  let audioBeatFloor = 0;
+  let lastBeatAt = 0;
+  const audioBands = { low: 0, mid: 0, high: 0, beat: 0 };
   let particles = [];
   const history = { cpu: [], gpu: [], net: [] };
 
@@ -106,6 +151,7 @@
     fx.style.height = `${height}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     makeParticles();
+    renderDeviceIdentity();
   }
 
   function makeParticles() {
@@ -182,11 +228,12 @@
     const speed = settings.animationSpeed / 100;
     phase += dt * .00032 * speed;
     const reactive = settings.audioReactive ? audioLevel * (settings.audioSensitivity / 100) : 0;
-    const pulse = 1 + reactive * .055 + Math.sin(phase*2.4) * .004;
+    const beat = settings.audioReactive ? audioBands.beat : 0;
+    const pulse = 1 + reactive * .047 + beat * .045 + Math.sin(phase*2.4) * .004;
 
     // Wide, barely-visible radial glow.
     const rg = ctx.createRadialGradient(cx,cy,0,cx,cy,base*1.7);
-    rg.addColorStop(0,`rgba(${accent.r},${accent.g},${accent.b},${.075 + reactive*.08})`);
+    rg.addColorStop(0,`rgba(${accent.r},${accent.g},${accent.b},${.075 + reactive*.08 + beat*.055})`);
     rg.addColorStop(.42,`rgba(${accent2.r},${accent2.g},${accent2.b},.026)`);
     rg.addColorStop(1,"rgba(0,0,0,0)");
     ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(cx,cy,base*1.7,0,Math.PI*2); ctx.fill();
@@ -286,8 +333,11 @@
   }
 
   function updateTelemetry(obj, live=true) {
-    const total = Math.max(0, Number(obj.TotalRam)||0);
-    const avail = Math.max(0, Number(obj.CurrentRamAvail)||0);
+    const numericFields=["CurrentCpu","CurrentGpu3D","TotalRam","CurrentRamAvail","CurrentNetDown","CurrentNetUp"];
+    const payloadValid=numericFields.every(key=>Object.prototype.hasOwnProperty.call(obj,key)&&Number.isFinite(Number(obj[key])));
+    const total = Math.max(0, Number(obj.TotalRam)||0); // Lively reports RAM in megabytes.
+    const rawAvail = Math.max(0, Number(obj.CurrentRamAvail)||0);
+    const avail = total>0?Math.min(total,rawAvail):rawAvail;
     const used = Math.max(0,total-avail);
     telemetry.cpu=clamp(obj.CurrentCpu,0,100);
     telemetry.gpu=clamp(obj.CurrentGpu3D,0,100);
@@ -299,8 +349,11 @@
     telemetry.cpuName=shortHardwareName(obj.NameCpu,"processor");
     telemetry.gpuName=shortHardwareName(obj.NameGpu,"graphics adapter");
     telemetry.netName=shortHardwareName(obj.NameNetCard,"network adapter");
+    telemetry.payloadValid=payloadValid;
+    telemetry.source=live?"host":"demo";
     if (live) { telemetry.live=true; telemetry.lastSeen=performance.now(); }
     renderTelemetryDOM();
+    renderDiagnostics();
   }
 
   function renderTelemetryDOM() {
@@ -308,7 +361,7 @@
     $("cpuValue").textContent=`${cpu.toFixed(1)}%`; $("gpuValue").textContent=`${gpu.toFixed(1)}%`; $("ramValue").textContent=`${ram.toFixed(1)}%`;
     $("cpuBar").style.width=`${cpu}%`; $("gpuBar").style.width=`${gpu}%`; $("ramBar").style.width=`${ram}%`;
     $("cpuName").textContent=telemetry.cpuName; $("gpuName").textContent=telemetry.gpuName; $("netName").textContent=telemetry.netName;
-    $("ramDetail").textContent=telemetry.ramTotal>0?`${(telemetry.ramUsed/(1024**3)).toFixed(1)} / ${(telemetry.ramTotal/(1024**3)).toFixed(1)} GB`:`-- / -- GB`;
+    $("ramDetail").textContent=telemetry.ramTotal>0?`${(telemetry.ramUsed/1024).toFixed(1)} / ${(telemetry.ramTotal/1024).toFixed(1)} GB`:`-- / -- GB`;
     $("netDown").textContent=formatBytesPerSec(telemetry.down); $("netUp").textContent=formatBytesPerSec(telemetry.up);
     $("coreCpu").textContent=cpu.toFixed(0).padStart(2,"0"); $("coreGpu").textContent=gpu.toFixed(0).padStart(2,"0");
     const weighted=clamp((cpu+gpu+ram)/3,0,100); $("corePercent").textContent=weighted.toFixed(1).padStart(5,"0");
@@ -318,6 +371,7 @@
 
   function setHostState(state) {
     const badge=$("hostState"), boot=$("bootLog"), link=$("linkStatus"), foot=$("footerState"), core=$("coreState"), mode=$("coreMode");
+    telemetry.state=state;
     badge.className=`state ${state}`;
     if (state==="live") {
       badge.textContent="LINK // ONLINE"; boot.innerHTML="<span>[ OK ]</span> host telemetry channel synchronized"; link.textContent="ONLINE"; foot.textContent="ONLINE"; core.textContent="SYSTEM NOMINAL"; mode.textContent="HOST LINKED";
@@ -326,6 +380,16 @@
     } else {
       badge.textContent="LINK // WAITING"; boot.innerHTML="<span>[ .. ]</span> establishing host telemetry channel"; link.textContent="STANDBY"; foot.textContent="STANDBY"; core.textContent="SYSTEM INITIALIZATION"; mode.textContent="SYNCHRONIZING";
     }
+    renderCoreContext();
+    renderDiagnostics();
+  }
+
+  function renderCoreContext() {
+    const label=$("coreSubLabel");
+    if (media.active) label.textContent="MEDIA UPLINK // ACTIVE";
+    else if (telemetry.state==="live") label.textContent="HOST INTEGRATION // ACTIVE";
+    else if (telemetry.state==="stale") label.textContent="HOST INTEGRATION // DEGRADED";
+    else label.textContent="LOCAL INTERFACE // STANDBY";
   }
 
   function updateHostState() {
@@ -339,7 +403,7 @@
     updateTelemetry({
       CurrentCpu: 18+8*Math.sin(t*.43)+3*Math.sin(t*1.7),
       CurrentGpu3D: 11+6*Math.sin(t*.31+1.2),
-      TotalRam: 32*(1024**3), CurrentRamAvail: (20.5+1.1*Math.sin(t*.19))*(1024**3),
+      TotalRam: 32*1024, CurrentRamAvail: (20.5+1.1*Math.sin(t*.19))*1024,
       CurrentNetDown: (1.4+.9*Math.abs(Math.sin(t*.37)))*(1024**2), CurrentNetUp:(.15+.12*Math.abs(Math.sin(t*.63)))*(1024**2),
       NameCpu:"DEMO // processor telemetry", NameGpu:"DEMO // graphics telemetry", NameNetCard:"DEMO // network telemetry"
     }, false);
@@ -354,12 +418,193 @@
     $("sessionUptime").textContent=[h,m,s].map(v=>String(v).padStart(2,"0")).join(":");
   }
 
+  function cleanText(value, fallback="", max=120) {
+    const text=String(value??"").replace(/\s+/g," ").trim();
+    if(!text)return fallback;
+    return text.length>max?text.slice(0,max-1)+"…":text;
+  }
+
+  function setStatus(id, text, state="muted") {
+    const el=$(id);
+    if(!el)return;
+    el.textContent=text;
+    el.classList.remove("good","warn","bad","muted");
+    el.classList.add(state);
+  }
+
+  function updateNowPlaying(obj) {
+    media.supported=true;
+    media.lastSeen=performance.now();
+    if(!obj||typeof obj!=="object") {
+      media.active=false;
+      media.title=media.artist=media.album=media.genre=media.playbackType=media.subtitle=media.thumbnail="";
+      media.track=media.trackCount=0;
+    } else {
+      media.title=cleanText(obj.Title,"",160);
+      media.artist=cleanText(obj.Artist||obj.AlbumArtist||obj.Subtitle,"",120);
+      media.album=cleanText(obj.AlbumTitle,"",120);
+      media.subtitle=cleanText(obj.Subtitle,"",120);
+      media.playbackType=cleanText(obj.PlaybackType,"MEDIA",32);
+      media.genre=Array.isArray(obj.Genres)?cleanText(obj.Genres.filter(Boolean).slice(0,2).join(" / "),"",60):"";
+      media.track=Math.max(0,Math.round(Number(obj.TrackNumber)||0));
+      media.trackCount=Math.max(0,Math.round(Number(obj.AlbumTrackCount)||0));
+      media.thumbnail=typeof obj.Thumbnail==="string"?obj.Thumbnail:"";
+      media.active=Boolean(media.title||media.artist||media.album);
+    }
+    renderMedia();
+    renderCoreContext();
+    renderDiagnostics();
+  }
+
+  function renderMedia() {
+    const panel=$("mediaPanel"), art=$("mediaArt");
+    if(!media.active) {
+      panel.classList.remove("has-art");
+      setStatus("mediaState",media.supported?"STANDBY":"WAITING","muted");
+      $("mediaPlaybackType").textContent="WINDOWS MEDIA SESSION";
+      $("mediaTitle").textContent="NO ACTIVE MEDIA";
+      $("mediaArtist").textContent=media.supported?"UPLINK // STANDBY":"UPLINK // WAITING FOR LIVELY";
+      $("mediaAlbum").textContent=media.supported?"Compatible source not currently active":"Requires Lively system-nowplaying feed";
+      $("mediaTrack").textContent="TRACK -- / --";
+      $("mediaGenre").textContent="UNCATEGORIZED";
+      art.removeAttribute("src");
+      art.dataset.source="";
+      return;
+    }
+
+    setStatus("mediaState","LINKED","good");
+    $("mediaPlaybackType").textContent=`${(media.playbackType||"MEDIA").toUpperCase()} // WINDOWS SESSION`;
+    $("mediaTitle").textContent=media.title||"UNTITLED MEDIA";
+    $("mediaArtist").textContent=media.artist||media.subtitle||"UNKNOWN ORIGIN";
+    $("mediaAlbum").textContent=media.album||media.subtitle||"ALBUM DATA UNAVAILABLE";
+    $("mediaTrack").textContent=media.track||media.trackCount?`TRACK ${String(media.track||"--").padStart(2,"0")} / ${String(media.trackCount||"--").padStart(2,"0")}`:"TRACK // UNINDEXED";
+    $("mediaGenre").textContent=(media.genre||"UNCATEGORIZED").toUpperCase();
+    if(media.thumbnail) {
+      if(art.dataset.source!==media.thumbnail) {
+        art.dataset.source=media.thumbnail;
+        art.src=media.thumbnail.startsWith("data:")?media.thumbnail:`data:image/png;base64,${media.thumbnail}`;
+      }
+      panel.classList.add("has-art");
+    } else {
+      panel.classList.remove("has-art");
+      art.removeAttribute("src");
+      art.dataset.source="";
+    }
+  }
+
+  function renderDeviceIdentity() {
+    $("logicalCores").textContent=device.cores?`${device.cores} THREADS`:"UNAVAILABLE";
+    $("displayGeometry").textContent=`${Math.round(window.innerWidth||width)} × ${Math.round(window.innerHeight||height)}`;
+    $("displayScale").textContent=`${(window.devicePixelRatio||1).toFixed(2)} ×`;
+    setStatus("browserOnline",device.online?"ONLINE":"OFFLINE",device.online?"good":"warn");
+    $("systemLocale").textContent=cleanText(device.locale,"UNKNOWN",24).toUpperCase();
+    $("systemTimezone").textContent=cleanText(device.timezone,"UNKNOWN",40).replace(/_/g," ").toUpperCase();
+
+    if(device.battery) {
+      const level=Math.round(clamp(device.battery.level,0,1)*100);
+      const text=device.battery.charging?(level>=99?"AC // FULL":`CHARGING // ${level}%`):`BATTERY // ${level}%`;
+      setStatus("batteryStatus",text,level<=20&&!device.battery.charging?"warn":"good");
+    } else if(device.batteryError) {
+      setStatus("batteryStatus","RESTRICTED","warn");
+    } else if(!device.batteryInitialized) {
+      setStatus("batteryStatus","PROBING","muted");
+    } else if(!device.batterySupported) {
+      setStatus("batteryStatus","UNAVAILABLE","muted");
+    }
+  }
+
+  async function initializeBattery() {
+    if(typeof navigator.getBattery!=="function") {
+      device.batterySupported=false;
+      device.batteryInitialized=true;
+      renderDeviceIdentity();
+      return;
+    }
+    device.batterySupported=true;
+    try {
+      device.battery=await navigator.getBattery();
+      const refresh=()=>renderDeviceIdentity();
+      ["chargingchange","levelchange","chargingtimechange","dischargingtimechange"].forEach(eventName=>device.battery.addEventListener(eventName,refresh));
+    } catch (_) {
+      device.battery=null;
+      device.batteryError=true;
+    }
+    device.batteryInitialized=true;
+    renderDeviceIdentity();
+  }
+
+  function renderDiagnostics() {
+    const now=performance.now();
+    if(telemetry.live) {
+      const age=Math.max(0,(now-telemetry.lastSeen)/1000);
+      if(telemetry.state==="live")setStatus("diagTelemetry",`LIVE // ${age.toFixed(1)}s`,"good");
+      else setStatus("diagTelemetry",`STALE // ${age.toFixed(1)}s`,"warn");
+      setStatus("diagPayload",telemetry.payloadValid?"VALID":"FAULT",telemetry.payloadValid?"good":"bad");
+    } else {
+      setStatus("diagTelemetry","LOCAL DEMO","muted");
+      setStatus("diagPayload",telemetry.payloadValid?"SIMULATED":"WAITING","muted");
+    }
+
+    if(paused)setStatus("diagRenderer","PAUSED","muted");
+    else if(renderer.fps>0) {
+      const healthy=renderer.fps>=settings.fps*.78;
+      setStatus("diagRenderer",`${renderer.fps.toFixed(1)} FPS`,healthy?"good":"warn");
+    } else setStatus("diagRenderer","WARMING","muted");
+
+    if(telemetry.live&&telemetry.payloadValid) {
+      const active=telemetry.down+telemetry.up>1024;
+      setStatus("diagNetwork",active?"ACTIVE":"IDLE",active?"good":"muted");
+    } else setStatus("diagNetwork",telemetry.source==="demo"?"SIMULATED":"WAITING","muted");
+
+    if(!settings.audioReactive)setStatus("diagAudio","DISABLED","muted");
+    else if(!audioSourceSeen)setStatus("diagAudio","WAITING","muted");
+    else setStatus("diagAudio",audioLevel>.035?"ACTIVE":"ARMED",audioLevel>.035?"good":"muted");
+
+    if(media.active)setStatus("diagMedia","LINKED","good");
+    else if(media.supported)setStatus("diagMedia","STANDBY","muted");
+    else setStatus("diagMedia","WAITING","muted");
+  }
+
+  function bandRms(start, end) {
+    let sum=0,count=0;
+    for(let i=start;i<end&&i<audio.length;i++) {
+      const value=clamp(audio[i],0,1.5);
+      sum+=value*value;
+      count++;
+    }
+    return count?Math.sqrt(sum/count):0;
+  }
+
+  function renderAudioBands() {
+    const sensitivity=settings.audioSensitivity/100;
+    const level=value=>settings.audioReactive?clamp(value*sensitivity,0,1)*100:0;
+    $("audioLowBar").style.width=`${level(audioBands.low).toFixed(1)}%`;
+    $("audioMidBar").style.width=`${level(audioBands.mid).toFixed(1)}%`;
+    $("audioHighBar").style.width=`${level(audioBands.high).toFixed(1)}%`;
+    const beat=$("beatState");
+    beat.className=audioBands.beat>.45&&settings.audioReactive?"hit":"";
+    beat.textContent=!settings.audioReactive?"OFF":audioBands.beat>.45?"HIT":audioSourceSeen?"ARMED":"WAIT";
+  }
+
   function updateAudioLevel() {
     let sum=0, count=0;
     for(let i=2;i<70;i++){const v=Number(audio[i])||0; sum+=v*v; count++;}
     const rms=count?Math.sqrt(sum/count):0;
     audioLevel=lerp(audioLevel,clamp(rms,0,1.5),.18);
-    $("audioStatus").textContent=settings.audioReactive?(audioLevel>.035?"ACTIVE":"ARMED"):"DISABLED";
+    audioBands.low=lerp(audioBands.low,bandRms(1,11),.22);
+    audioBands.mid=lerp(audioBands.mid,bandRms(11,40),.2);
+    audioBands.high=lerp(audioBands.high,bandRms(40,96),.18);
+    audioBands.beat=lerp(audioBands.beat,0,.2);
+    const onset=audioBands.low*.72+audioBands.mid*.28;
+    const threshold=Math.max(.065,audioBeatFloor*1.34);
+    const now=performance.now();
+    if(audioSourceSeen&&onset>threshold&&now-lastBeatAt>170) {
+      audioBands.beat=1;
+      lastBeatAt=now;
+    }
+    audioBeatFloor=lerp(audioBeatFloor,onset,onset>audioBeatFloor?.025:.11);
+    $("audioStatus").textContent=!settings.audioReactive?"DISABLED":!audioSourceSeen?"WAITING":audioLevel>.035?"ACTIVE":"ARMED";
+    renderAudioBands();
   }
 
   function sampleHistory(now) {
@@ -383,7 +628,19 @@
   function animationLoop(now) {
     if(paused){requestAnimationFrame(animationLoop);return;}
     const interval=1000/settings.fps;
-    if(now-lastFrame>=interval){ const dt=Math.min(80,now-lastFrame); lastFrame=now; updateAudioLevel(); drawBackground(dt); renderTelemetryDOM(); sampleHistory(now); drawMiniGraph(); }
+    if(now-lastFrame>=interval){
+      const dt=Math.min(80,now-lastFrame);
+      lastFrame=now;
+      updateAudioLevel(); drawBackground(dt); renderTelemetryDOM(); sampleHistory(now); drawMiniGraph();
+      renderer.frames++;
+      const sampleElapsed=now-renderer.sampleStart;
+      if(sampleElapsed>=1000) {
+        renderer.fps=renderer.frames*1000/sampleElapsed;
+        renderer.frames=0;
+        renderer.sampleStart=now;
+        renderDiagnostics();
+      }
+    }
     requestAnimationFrame(animationLoop);
   }
 
@@ -394,7 +651,7 @@
       case "customBackground": settings.customBackground=String(val||settings.customBackground); break;
       case "topSafeArea": settings.topSafeArea=clamp(val,0,180); break;
       case "hudOpacity": settings.hudOpacity=clamp(val,25,100); break;
-      case "fps": settings.fps=[20,30,45,60][clamp(val,0,3)]||30; break;
+      case "fps": settings.fps=[20,30,45,60][clamp(val,0,3)]||30; renderer.frames=0; renderer.sampleStart=performance.now(); break;
       case "animationSpeed": settings.animationSpeed=clamp(val,25,200); break;
       case "glow": settings.glow=clamp(val,0,160); break;
       case "scanlines": settings.scanlines=Boolean(val); break;
@@ -411,17 +668,23 @@
       default:return;
     }
     applyTheme();
+    renderDiagnostics();
+    renderAudioBands();
   }
 
   window.livelySystemInformation=function(data){try{const obj=typeof data==="string"?JSON.parse(data):data;if(obj&&typeof obj==="object")updateTelemetry(obj,true);}catch(e){console.error("Invalid Lively telemetry",e)}};
-  window.livelyAudioListener=function(arr){if(Array.isArray(arr))audio=arr.slice(0,128);};
-  window.livelyWallpaperPlaybackChanged=function(data){try{const obj=typeof data==="string"?JSON.parse(data):data;paused=Boolean(obj?.IsPaused);if(!paused)lastFrame=performance.now();}catch(e){console.error("Invalid Lively pause event",e)}};
+  window.livelyCurrentTrack=function(data){try{const obj=typeof data==="string"?JSON.parse(data):data;updateNowPlaying(obj);}catch(e){console.error("Invalid Lively media data",e)}};
+  window.livelyAudioListener=function(arr){if(Array.isArray(arr)){audioSourceSeen=true;audio=arr.slice(0,128);}};
+  window.livelyWallpaperPlaybackChanged=function(data){try{const obj=typeof data==="string"?JSON.parse(data):data;paused=Boolean(obj?.IsPaused);renderer.frames=0;renderer.sampleStart=performance.now();if(!paused)lastFrame=performance.now();renderDiagnostics();}catch(e){console.error("Invalid Lively pause event",e)}};
   window.livelyPropertyListener=function(name,val){setProperty(name,val);};
 
   window.addEventListener("resize",resize,{passive:true});
+  window.addEventListener("online",()=>{device.online=true;renderDeviceIdentity();});
+  window.addEventListener("offline",()=>{device.online=false;renderDeviceIdentity();});
   document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!paused)lastFrame=performance.now();});
+  $("mediaArt").addEventListener("error",()=>{$("mediaPanel").classList.remove("has-art");});
 
-  resize(); applyTheme(); updateClock(); setHostState("waiting"); demoTelemetryTick();
-  setInterval(updateClock,250); setInterval(updateHostState,1000); setInterval(demoTelemetryTick,1000);
+  resize(); applyTheme(); renderMedia(); renderDeviceIdentity(); updateClock(); setHostState("waiting"); demoTelemetryTick(); initializeBattery();
+  setInterval(updateClock,250); setInterval(renderDiagnostics,500); setInterval(updateHostState,1000); setInterval(demoTelemetryTick,1000);
   requestAnimationFrame(animationLoop);
 })();

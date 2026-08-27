@@ -3,12 +3,12 @@
   "Title": "J.A.R.V.I.S. // Holographic System Interface",
   "Thumbnail": "thumbnail.jpg",
   "Preview": null,
-  "Desc": "A cinematic J.A.R.V.I.S.-inspired holographic desktop HUD with live CPU, GPU, RAM and network telemetry, optional audio-reactive reactor graphics, diagnostic panels and configurable PowerToys safe area.",
+  "Desc": "A cinematic J.A.R.V.I.S.-inspired holographic desktop HUD with live hardware telemetry, Windows media metadata, audio-reactive reactor graphics, real diagnostics and configurable PowerToys safe area.",
   "Author": "raystanza",
   "License": "MIT",
   "Contact": "raystanza.dev@gmail.com",
   "Type": 1,
   "FileName": "index.html",
-  "Arguments": "--system-information --audio --pause-event true",
+  "Arguments": "--system-information --system-nowplaying --audio --pause-event true",
   "IsAbsolutePath": false
 }

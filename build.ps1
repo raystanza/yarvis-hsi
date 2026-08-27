@@ -17,7 +17,7 @@ $packageFiles = @(
     "styles.css"
     "LivelyInfo.json"
     "LivelyProperties.json"
-    "thumbnail.png"
+    "thumbnail.jpg"
     "README.md"
     "LICENSE"
 )
