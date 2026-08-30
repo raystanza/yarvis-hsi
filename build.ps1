@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 $BuildVersion = (Get-Content -LiteralPath (Join-Path $PSScriptRoot "version") -Raw).Trim()
 
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-    $OutputPath = Join-Path $PSScriptRoot "dist/YARVIS-HSI-v$BuildVersion.zip"
+    $OutputPath = Join-Path $PSScriptRoot "dist/YARVIS-v$BuildVersion.zip"
 }
 
 $packageFiles = @(
@@ -18,6 +18,7 @@ $packageFiles = @(
     "LivelyInfo.json"
     "LivelyProperties.json"
     "thumbnail.jpg"
+    "preview.gif"
     "README.md"
     "LICENSE"
 )

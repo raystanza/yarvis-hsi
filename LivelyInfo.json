@@ -1,8 +1,8 @@
 {
-  "AppVersion": "2.0.6.0",
+  "AppVersion": "2.2.1.0",
   "Title": "Y.A.R.V.I.S. // Holographic System Interface",
   "Thumbnail": "thumbnail.jpg",
-  "Preview": null,
+  "Preview": "preview.gif",
   "Desc": "Y.A.R.V.I.S. - A holographic desktop HUD with live hardware telemetry, Windows media metadata, audio-reactive reactor graphics, real diagnostics and configurable safe area.",
   "Author": "raystanza",
   "License": "MIT",
