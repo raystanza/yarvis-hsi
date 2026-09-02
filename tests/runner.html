@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><title>YARVIS test runner</title></head>
+<body>
+<canvas id="fxCanvas" width="800" height="600"></canvas>
+<canvas id="miniGraph" width="420" height="120"></canvas>
+<div id="fixtures" hidden></div>
+<script src="fixtures.js"></script>
+<script src="../core.js"></script>
+<script src="../render.js"></script>
+<script src="../effects.js"></script>
+<script src="../modules.js"></script>
+<script src="../persona.js"></script>
+<script src="tests.js"></script>
+<script>
+  function assertEqual(actual, expected) {
+    if (actual !== expected) {
+      throw new Error(`expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+    }
+  }
+  window.__runTests = function () {
+    const results = [];
+    for (const [name, fn] of (window.YARVIS_TESTS || [])) {
+      try { fn(); results.push({ name, ok: true }); }
+      catch (e) { results.push({ name, ok: false, error: String((e && e.message) || e) }); }
+    }
+    return results;
+  };
+</script>
+</body>
+</html>

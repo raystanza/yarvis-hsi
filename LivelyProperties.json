@@ -97,6 +97,47 @@
     "step": 5,
     "text": "Audio reaction sensitivity (%)"
   },
+  "intensity": {
+    "type": "dropdown",
+    "value": 1,
+    "text": "Effect intensity",
+    "items": [
+      "Minimal",
+      "Standard",
+      "Maximum",
+      "Overdrive"
+    ]
+  },
+  "reactorSpectacle": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Reactor spectacle layers"
+  },
+  "alertStates": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Reactive alert states"
+  },
+  "cyclingDeck": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Cycling module deck"
+  },
+  "cornerCallouts": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Corner callouts"
+  },
+  "personaLog": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Y.A.R.V.I.S. commentary log"
+  },
+  "bootSequence": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Boot sequence on load"
+  },
   "clock24h": {
     "type": "checkbox",
     "value": true,
