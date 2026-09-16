@@ -13,6 +13,11 @@ if ([string]::IsNullOrWhiteSpace($OutputPath)) {
 
 $packageFiles = @(
     "index.html"
+    "core.js"
+    "render.js"
+    "effects.js"
+    "modules.js"
+    "persona.js"
     "app.js"
     "styles.css"
     "LivelyInfo.json"

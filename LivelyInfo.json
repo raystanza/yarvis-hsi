@@ -3,7 +3,7 @@
   "Title": "Y.A.R.V.I.S. // Holographic System Interface",
   "Thumbnail": "thumbnail.jpg",
   "Preview": "preview.gif",
-  "Desc": "Y.A.R.V.I.S. - A holographic desktop HUD with live hardware telemetry, Windows media metadata, audio-reactive reactor graphics, real diagnostics and configurable safe area.",
+  "Desc": "Y.A.R.V.I.S. - A holographic desktop HUD with live hardware telemetry, Windows media metadata, audio-reactive reactor graphics, a reactive alert state machine, a cycling module deck, an event-driven Y.A.R.V.I.S. commentary log, and a four-level effect intensity control.",
   "Author": "raystanza",
   "License": "MIT",
   "Contact": "raystanza.dev@gmail.com",
